@@ -1,11 +1,13 @@
 import { NextResponse, userAgent } from 'next/server'
 import type { NextRequest } from 'next/server'
-
-const WORDPRESS_ORIGIN = process.env.WORDPRESS_ORIGIN
+import { getRequestContext } from '@cloudflare/next-on-pages'
 
 const FACEBOOK_REFERER = /^https?:\/\/(?:[a-z0-9-]+\.)*facebook\.com\//i
 
 export function middleware(request: NextRequest) {
+  const env = getRequestContext().env
+  const WORDPRESS_ORIGIN = env.WORDPRESS_ORIGIN as string
+
   if (!WORDPRESS_ORIGIN) {
     throw new Error('WORDPRESS_ORIGIN environment variable is not set')
   }
