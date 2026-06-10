@@ -1,14 +1,24 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
-const WORDPRESS_ORIGIN = process.env.WORDPRESS_ORIGIN
+const WORDPRESS_ORIGIN =
+  process.env.WORDPRESS_ORIGIN || 'https://kisiselgelisimforum.com'
+
+const WORDPRESS_HOST = new URL(WORDPRESS_ORIGIN).hostname
 
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
-      { protocol: 'https', hostname: 'kisiselgelisimforum.com' },
-      { protocol: 'https', hostname: '**.kisiselgelisimforum.com' },
+      {
+        protocol: 'https',
+        hostname: WORDPRESS_HOST,
+      },
+      {
+        protocol: 'https',
+        hostname: `**.${WORDPRESS_HOST}`,
+      },
     ],
   },
+
   async rewrites() {
     return [
       {
@@ -19,8 +29,8 @@ const nextConfig: NextConfig = {
         source: '/wp-includes/:path*',
         destination: `${WORDPRESS_ORIGIN}/wp-includes/:path*`,
       },
-    ];
+    ]
   },
-};
+}
 
-export default nextConfig;
+export default nextConfig
