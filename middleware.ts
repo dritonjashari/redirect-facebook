@@ -2,9 +2,14 @@ import { NextResponse, userAgent } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 const WORDPRESS_ORIGIN = process.env.WORDPRESS_ORIGIN
+
 const FACEBOOK_REFERER = /^https?:\/\/(?:[a-z0-9-]+\.)*facebook\.com\//i
 
 export function middleware(request: NextRequest) {
+  if (!WORDPRESS_ORIGIN) {
+    throw new Error('WORDPRESS_ORIGIN environment variable is not set')
+  }
+
   const { pathname, search } = request.nextUrl
 
   if (pathname === '/') return NextResponse.next()
@@ -13,13 +18,14 @@ export function middleware(request: NextRequest) {
   if (!FACEBOOK_REFERER.test(referer)) return NextResponse.next()
 
   const { device } = userAgent(request)
+
   if (device.type !== 'mobile' && device.type !== 'tablet') {
     return NextResponse.next()
   }
 
   return NextResponse.redirect(
     new URL(`${pathname}${search}`, WORDPRESS_ORIGIN),
-    302,
+    302
   )
 }
 
