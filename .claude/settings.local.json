@@ -1,8 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:${WORDPRESS_HOST})",
-      "Bash(curl -sI -A \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36\" \"${WORDPRESS_ORIGIN}/36311/\" --max-time 15)"
+      "WebFetch(domain:fullstory26.com)",
+      "Bash(curl -sI -A \"Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0 Safari/537.36\" \"https://kisiselgelisimforum.com/36311/\" --max-time 15)"
     ]
   }
 }
