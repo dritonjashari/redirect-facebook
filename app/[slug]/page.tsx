@@ -1,25 +1,27 @@
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 
-const WORDPRESS_ORIGIN =
-  process.env.WORDPRESS_ORIGIN || 'https://kisiselgelisimforum.com'
+export const dynamic = 'force-dynamic'
 
-const WORDPRESS_HOST = new URL(WORDPRESS_ORIGIN).hostname
+function getWordPressOrigin() {
+  return process.env.WORDPRESS_ORIGIN || 'https://kisiselgelisimforum.com'
+}
 
 type PostMeta = {
   title: string
   image: string | null
 }
 
-function maskUpstreamUrl(raw: string | null): string | null {
+function maskUpstreamUrl(raw: string | null, origin: string): string | null {
   if (!raw) return null
 
   try {
+    const wordpressHost = new URL(origin).hostname
     const url = new URL(raw)
 
     if (
-      url.hostname === WORDPRESS_HOST ||
-      url.hostname.endsWith(`.${WORDPRESS_HOST}`)
+      url.hostname === wordpressHost ||
+      url.hostname.endsWith(`.${wordpressHost}`)
     ) {
       return `${url.pathname}${url.search}`
     }
@@ -55,7 +57,9 @@ function decodeEntities(input: string): string {
 }
 
 async function fetchPostMeta(slug: string): Promise<PostMeta | null> {
-  const res = await fetch(`${WORDPRESS_ORIGIN}/${slug}`, {
+  const origin = getWordPressOrigin()
+
+  const res = await fetch(`${origin}/${slug}`, {
     headers: {
       'User-Agent':
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -63,7 +67,7 @@ async function fetchPostMeta(slug: string): Promise<PostMeta | null> {
         'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
       'Accept-Language': 'en-US,en;q=0.5',
     },
-    next: { revalidate: 300 },
+    cache: 'no-store',
   })
 
   if (!res.ok) return null
@@ -80,7 +84,7 @@ async function fetchPostMeta(slug: string): Promise<PostMeta | null> {
 
   return {
     title,
-    image: maskUpstreamUrl(ogImage),
+    image: maskUpstreamUrl(ogImage, origin),
   }
 }
 
@@ -90,7 +94,6 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-
   const meta = await fetchPostMeta(slug)
 
   if (!meta) return {}
@@ -110,7 +113,6 @@ export default async function Page({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-
   const meta = await fetchPostMeta(slug)
 
   if (!meta) notFound()
