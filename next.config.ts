@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const WORDPRESS_ORIGIN='https://fullstory26.com';
+const WORDPRESS_ORIGIN: any = process.env.WORDPRESS_ORIGIN
 
 const nextConfig: NextConfig = {
   async rewrites() {
