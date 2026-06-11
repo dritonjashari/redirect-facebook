@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server'
 const WORDPRESS_ORIGIN = process.env.WORDPRESS_ORIGIN
 const FACEBOOK_REFERER = /^https?:\/\/(?:[a-z0-9-]+\.)*facebook\.com\//i
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl
 
   if (pathname === '/') return NextResponse.next()
