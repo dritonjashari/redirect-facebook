@@ -1,12 +1,17 @@
 import { proxyUpstream } from '@/lib/upstream-proxy'
 
-export const runtime = 'edge'
-
-type Ctx = { params: Promise<{ path: string[] }> }
-
-async function handle(request: Request, { params }: Ctx) {
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ path: string[] }> },
+) {
   const { path } = await params
   return proxyUpstream(request, `/wp-includes/${path.join('/')}`)
 }
 
-export { handle as GET, handle as HEAD }
+export async function HEAD(
+  request: Request,
+  { params }: { params: Promise<{ path: string[] }> },
+) {
+  const { path } = await params
+  return proxyUpstream(request, `/wp-includes/${path.join('/')}`)
+}

@@ -1,18 +1,15 @@
 const WORDPRESS_ORIGIN =
   process.env.WORDPRESS_ORIGIN || 'https://kisiselgelisimforum.com'
 
-const HOP_BY_HOP = new Set([
-  'connection',
-  'keep-alive',
-  'proxy-authenticate',
-  'proxy-authorization',
-  'te',
-  'trailer',
-  'transfer-encoding',
-  'upgrade',
-  'content-encoding',
-  'content-length',
-])
+const PASSTHROUGH_HEADERS = [
+  'content-type',
+  'cache-control',
+  'last-modified',
+  'etag',
+  'expires',
+  'date',
+  'vary',
+]
 
 export async function proxyUpstream(
   request: Request,
@@ -35,20 +32,33 @@ export async function proxyUpstream(
     outgoing[authHeaderName] = authHeaderValue
   }
 
-  const upstream = await fetch(upstreamUrl, {
-    method: request.method,
-    headers: outgoing,
-    redirect: 'follow',
-  })
+  let upstream: Response
+  try {
+    upstream = await fetch(upstreamUrl, {
+      method: request.method === 'HEAD' ? 'HEAD' : 'GET',
+      headers: outgoing,
+      redirect: 'follow',
+    })
+  } catch (err) {
+    return new Response(`Upstream fetch failed: ${(err as Error).message}`, {
+      status: 502,
+      headers: { 'content-type': 'text/plain; charset=utf-8' },
+    })
+  }
 
   const headers = new Headers()
-  upstream.headers.forEach((value, key) => {
-    if (!HOP_BY_HOP.has(key.toLowerCase())) headers.set(key, value)
-  })
+  for (const name of PASSTHROUGH_HEADERS) {
+    const value = upstream.headers.get(name)
+    if (value) headers.set(name, value)
+  }
+  if (!headers.has('cache-control')) {
+    headers.set('cache-control', 'public, max-age=86400')
+  }
 
-  return new Response(upstream.body, {
-    status: upstream.status,
-    statusText: upstream.statusText,
-    headers,
-  })
+  if (request.method === 'HEAD') {
+    return new Response(null, { status: upstream.status, headers })
+  }
+
+  const body = await upstream.arrayBuffer()
+  return new Response(body, { status: upstream.status, headers })
 }
