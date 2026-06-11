@@ -19,18 +19,6 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  async rewrites() {
-    return [
-      {
-        source: '/wp-content/:path*',
-        destination: `${WORDPRESS_ORIGIN}/wp-content/:path*`,
-      },
-      {
-        source: '/wp-includes/:path*',
-        destination: `${WORDPRESS_ORIGIN}/wp-includes/:path*`,
-      },
-    ]
-  },
 }
 
 export default nextConfig
