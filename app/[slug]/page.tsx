@@ -67,14 +67,22 @@ function decodeEntities(input: string): string {
 }
 
 async function fetchPostMeta(slug: string): Promise<PostMeta | null> {
+  const headers: Record<string, string> = {
+    'User-Agent':
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    Accept:
+      'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.5',
+  }
+
+  const authHeaderName = process.env.UPSTREAM_AUTH_HEADER
+  const authHeaderValue = process.env.UPSTREAM_AUTH_SECRET
+  if (authHeaderName && authHeaderValue) {
+    headers[authHeaderName] = authHeaderValue
+  }
+
   const res = await fetch(`${WORDPRESS_ORIGIN}/${slug}`, {
-    headers: {
-      'User-Agent':
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      Accept:
-        'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-      'Accept-Language': 'en-US,en;q=0.5',
-    },
+    headers,
     next: { revalidate: 300 },
   })
 

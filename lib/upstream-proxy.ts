@@ -21,15 +21,23 @@ export async function proxyUpstream(
   const { search } = new URL(request.url)
   const upstreamUrl = `${WORDPRESS_ORIGIN}${path}${search}`
 
+  const outgoing: Record<string, string> = {
+    'User-Agent':
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    Accept: request.headers.get('accept') ?? '*/*',
+    'Accept-Language':
+      request.headers.get('accept-language') ?? 'en-US,en;q=0.5',
+  }
+
+  const authHeaderName = process.env.UPSTREAM_AUTH_HEADER
+  const authHeaderValue = process.env.UPSTREAM_AUTH_SECRET
+  if (authHeaderName && authHeaderValue) {
+    outgoing[authHeaderName] = authHeaderValue
+  }
+
   const upstream = await fetch(upstreamUrl, {
     method: request.method,
-    headers: {
-      'User-Agent':
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      Accept: request.headers.get('accept') ?? '*/*',
-      'Accept-Language':
-        request.headers.get('accept-language') ?? 'en-US,en;q=0.5',
-    },
+    headers: outgoing,
     redirect: 'follow',
   })
 
