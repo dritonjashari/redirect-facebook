@@ -1,9 +1,16 @@
 import type { NextConfig } from "next";
 
-const WORDPRESS_ORIGIN: any = process.env.WORDPRESS_ORIGIN
+// Fallback to an empty string or a placeholder so the build doesn't crash if env is missing
+const WORDPRESS_ORIGIN = process.env.WORDPRESS_ORIGIN || "";
 
 const nextConfig: NextConfig = {
   async rewrites() {
+    // If the origin isn't defined, return an empty array to prevent malformed URL errors
+    if (!WORDPRESS_ORIGIN) {
+      console.warn("⚠️ WORDPRESS_ORIGIN is not defined in your environment variables.");
+      return [];
+    }
+
     return [
       {
         source: "/wp-content/:path*",
