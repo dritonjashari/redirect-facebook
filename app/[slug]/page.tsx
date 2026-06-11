@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 
@@ -6,9 +7,20 @@ const WORDPRESS_ORIGIN =
 
 const WORDPRESS_HOST = new URL(WORDPRESS_ORIGIN).hostname
 
+const SITE_NAME = process.env.SITE_NAME || 'Redirect'
+
 type PostMeta = {
   title: string
+  description: string | null
   image: string | null
+  imageWidth: number | null
+  imageHeight: number | null
+  imageAlt: string | null
+  siteName: string | null
+  publishedTime: string | null
+  modifiedTime: string | null
+  author: string | null
+  locale: string | null
 }
 
 function maskUpstreamUrl(raw: string | null): string | null {
@@ -72,15 +84,40 @@ async function fetchPostMeta(slug: string): Promise<PostMeta | null> {
 
   const ogTitle = pickMeta(html, 'og:title')
   const titleTag = html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1] ?? null
+  const ogDescription =
+    pickMeta(html, 'og:description') ?? pickMeta(html, 'description')
   const ogImage = pickMeta(html, 'og:image')
+  const ogImageAlt = pickMeta(html, 'og:image:alt')
+  const ogImageWidth = pickMeta(html, 'og:image:width')
+  const ogImageHeight = pickMeta(html, 'og:image:height')
+  const ogSiteName = pickMeta(html, 'og:site_name')
+  const ogLocale = pickMeta(html, 'og:locale')
+  const publishedTime = pickMeta(html, 'article:published_time')
+  const modifiedTime = pickMeta(html, 'article:modified_time')
+  const author = pickMeta(html, 'article:author') ?? pickMeta(html, 'author')
 
   const title = decodeEntities((ogTitle ?? titleTag ?? '').trim())
 
   if (!title) return null
 
+  const parseInt10 = (value: string | null) => {
+    if (!value) return null
+    const n = Number.parseInt(value, 10)
+    return Number.isFinite(n) ? n : null
+  }
+
   return {
     title,
+    description: ogDescription ? decodeEntities(ogDescription.trim()) : null,
     image: maskUpstreamUrl(ogImage),
+    imageWidth: parseInt10(ogImageWidth),
+    imageHeight: parseInt10(ogImageHeight),
+    imageAlt: ogImageAlt ? decodeEntities(ogImageAlt) : null,
+    siteName: ogSiteName ? decodeEntities(ogSiteName) : null,
+    publishedTime,
+    modifiedTime,
+    author: author ? decodeEntities(author) : null,
+    locale: ogLocale,
   }
 }
 
@@ -88,18 +125,46 @@ export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string }>
-}) {
+}): Promise<Metadata> {
   const { slug } = await params
 
   const meta = await fetchPostMeta(slug)
 
   if (!meta) return {}
 
+  const canonicalPath = `/${slug}`
+  const ogImage = meta.image
+    ? {
+        url: meta.image,
+        ...(meta.imageWidth ? { width: meta.imageWidth } : {}),
+        ...(meta.imageHeight ? { height: meta.imageHeight } : {}),
+        alt: meta.imageAlt ?? meta.title,
+      }
+    : null
+
   return {
     title: meta.title,
+    description: meta.description ?? undefined,
+    alternates: {
+      canonical: canonicalPath,
+    },
     openGraph: {
+      type: 'article',
       title: meta.title,
-      images: meta.image ? [{ url: meta.image }] : [],
+      description: meta.description ?? undefined,
+      url: canonicalPath,
+      siteName: meta.siteName ?? SITE_NAME,
+      locale: meta.locale ?? undefined,
+      images: ogImage ? [ogImage] : [],
+      publishedTime: meta.publishedTime ?? undefined,
+      modifiedTime: meta.modifiedTime ?? undefined,
+      authors: meta.author ? [meta.author] : undefined,
+    },
+    twitter: {
+      card: meta.image ? 'summary_large_image' : 'summary',
+      title: meta.title,
+      description: meta.description ?? undefined,
+      images: meta.image ? [meta.image] : undefined,
     },
   }
 }
@@ -125,7 +190,7 @@ export default async function Page({
         <div className="relative mt-8 aspect-[16/9] w-full overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-900">
           <Image
             src={meta.image}
-            alt={meta.title}
+            alt={meta.imageAlt ?? meta.title}
             fill
             sizes="(min-width: 768px) 768px, 100vw"
             className="object-cover"
@@ -133,6 +198,12 @@ export default async function Page({
             unoptimized
           />
         </div>
+      )}
+
+      {meta.description && (
+        <p className="mt-6 text-lg leading-relaxed text-zinc-700 dark:text-zinc-300">
+          {meta.description}
+        </p>
       )}
     </main>
   )
