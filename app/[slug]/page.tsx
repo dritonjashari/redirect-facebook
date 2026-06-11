@@ -1,25 +1,14 @@
-import type { Metadata } from 'next'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 
-const WORDPRESS_ORIGIN: any = process.env.WORDPRESS_ORIGIN
+const WORDPRESS_ORIGIN =
+  process.env.WORDPRESS_ORIGIN || 'https://kisiselgelisimforum.com'
 
 const WORDPRESS_HOST = new URL(WORDPRESS_ORIGIN).hostname
 
-const SITE_NAME = process.env.SITE_NAME || 'Redirect'
-
 type PostMeta = {
   title: string
-  description: string | null
   image: string | null
-  imageWidth: number | null
-  imageHeight: number | null
-  imageAlt: string | null
-  siteName: string | null
-  publishedTime: string | null
-  modifiedTime: string | null
-  author: string | null
-  locale: string | null
 }
 
 function maskUpstreamUrl(raw: string | null): string | null {
