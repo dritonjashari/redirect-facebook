@@ -2,8 +2,7 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 
-const WORDPRESS_ORIGIN =
-  process.env.WORDPRESS_ORIGIN || 'https://kisiselgelisimforum.com'
+const WORDPRESS_ORIGIN: any = process.env.WORDPRESS_ORIGIN
 
 const WORDPRESS_HOST = new URL(WORDPRESS_ORIGIN).hostname
 
