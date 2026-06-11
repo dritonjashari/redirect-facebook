@@ -1,21 +1,21 @@
 import type { NextConfig } from "next";
 
-const WEBSITE=process.env.WORDPRESS_ORIGIN;
+const WORDPRESS_ORIGIN='https://fullstory26.com';
 
 const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
         source: "/wp-content/:path*",
-        destination: `${WEBSITE}/wp-content/:path*`,
+        destination: `${WORDPRESS_ORIGIN}/wp-content/:path*`,
       },
       {
         source: "/wp-includes/:path*",
-        destination: `${WEBSITE}/wp-includes/:path*`,
+        destination: `${WORDPRESS_ORIGIN}/wp-includes/:path*`,
       },
       {
         source: "/wp-admin/images/:path*",
-        destination: `${WEBSITE}/wp-admin/images/:path*`,
+        destination: `${WORDPRESS_ORIGIN}/wp-admin/images/:path*`,
       },
     ];
   },
